@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <style>
+      body {
+        padding: 60px 0;
+      }
+
+      table.messages {
+        table-layout: fixed;
+      }
+
+      table.messages tr.message td.user {
+        width: 200px;
+        vertical-align: top;
+        text-align: right;
+        font-weight: bold;
+      }
+
+      table.messages tr.message td.content {
+        vertical-align: top;
+      }
+
+      table.messages tr.message td.content .outer {
+        position: relative;
+      }
+
+      table.messages tr.message td.content .inner {
+        overflow: hidden;
+        position: absolute;
+        width: 100%;
+      }
+
+      table.messages tr.message td.timestamp {
+        width: 100px;
+        vertical-align: top;
+        color: #999;
+        white-space: nowrap;
+      }
+
+      .footer .new-message {
+        margin: 0;
+        padding: 0;
+      }
+
+      .footer table {
+        margin: 10px 0;
+        padding: 0;
+      }
+    </style>
+    <script src="https://fb.me/react-0.13.3.js"></script>
+    <script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js"></script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="col-md-12">
+          <!-- messages -->
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">bewd_spring_15</h3>
+            </div>
+            <div id="room-messages"></div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="navbar navbar-default navbar-fixed-bottom footer" role="navigation">
+      <div class="container-fluid">
+        <div class="new-message">
+          <table style="width: 100%">
+            <tr>
+              <td>
+                <textarea class="form-control" rows="1" name="content" style="width: 100%"></textarea>
+              </td>
+              <td style="width: 1%; padding-left: 5px">
+                <button class="btn btn-default">
+                  Send
+                </button>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </nav>
+
+    <script type="text/jsx">
+      var Message = React.createClass({
+        render: function() {
+          return (
+            <tr className="message">
+              <td className="user">{this.props.name}</td>
+              <td className="content">{this.props.text}</td>
+              <td className="timestamp">{moment(this.props.timestamp).format('h:mm A')}</td>
+            </tr>
+          )
+        }
+      });
+
+      var Room = React.createClass({
+        render: function() {
+          var messages = this.props.messages.map(function(message){
+            return <Message {...message} />;
+          });
+          return (
+            <table className="table messages">
+              <tbody>
+                {messages}
+              </tbody>
+            </table>
+          )
+        }
+      })
+
+      function renderApp(messages) {
+        React.render(
+          <Room messages={messages} />,
+          document.getElementById('room-messages')
+        );
+      }
+    </script>
+
+    <script>
+      var name = prompt("What is your name?");
+      var messages = [];
+
+      function getMessages() {
+        $.getJSON('/messages', function(data){
+          renderApp(data.messages);
+        });
+      }
+
+      // Use setTimeout to poll
+      getMessages();
+
+      $('.new-message textarea').keypress(function (e) {
+        if (e.keyCode == 13) {
+          var text = $('.new-message textarea').val();
+          $.post('/messages', { name: name, text: text }, getMessages)
+          $('.new-message textarea').val('');
+        }
+      });
+
+      $('.new-message button').click(function (e) {
+        var text = $('.new-message textarea').val();
+        // TODO: Post to server
+        $('.new-message textarea').val('');
+      });
+
+    </script>
+  </body>
+</html>
